@@ -200,13 +200,16 @@ my $archive_file;
 if ($conf->{compressoutput}) {
     $archive_file = create_tar_gz(\@output_files, $conf->{archive}, $conf->{filenameprefix}, $full);
 } else {
-    # Move TSV files to the archive directory
+    # Move TSV files to the archive directory and update their paths
+    my @archived_files;
     foreach my $file (@output_files) {
-        my $destination = $conf->{archive} . '/' . (split('/', $file))[-1];
+        my $filename = (split('/', $file))[-1];
+        my $destination = $conf->{archive} . '/' . $filename;
         rename($file, $destination) or warn "Could not move $file to $destination: $!";
         logmsg("INFO", "Moved $file to archive directory: $destination");
+        push @archived_files, $destination;
     }
-    $archive_file = \@output_files;  # Keep track of the moved files
+    $archive_file = \@archived_files;  # Use updated paths for SFTP upload
 }
 
 ###########################
