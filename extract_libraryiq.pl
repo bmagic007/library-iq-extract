@@ -181,7 +181,7 @@ my @holds = get_data(
     get_hold_detail_sql(),
     $full ? ($very_old_date) : ($run_date_filter)
 );
-my $hold_out_file = write_data_to_file("${prefix}_holds_${fdate}_${suffix}", \@holds, [qw/bibrecordid pickup_lib shortname/], $conf->{tempdir});
+my $hold_out_file = write_data_to_file("${prefix}_holds_${fdate}_${suffix}", \@holds, [qw/bibrecordid pickup_lib shortname hold_count/], $conf->{tempdir});
 
 # Process Inhouse
 my @inhouse = get_data(
