@@ -254,28 +254,36 @@ sub get_hold_ids_sql {
 sub get_hold_detail_sql {
     return q{
        SELECT
-              (
-                  CASE
-                  WHEN ahr.hold_type='T' THEN ahr.target
-                  WHEN ahr.hold_type='C' THEN ac_hold.record
-                  WHEN ahr.hold_type='V' THEN acn_hold.record
-                  WHEN ahr.hold_type='P' THEN acp_hold.record
-                  WHEN ahr.hold_type='M' THEN mmr.master_record
-                  ELSE -1
-                  END
-              ) as bibrecordid, ahr.pickup_lib, o.shortname
-       FROM action.hold_request ahr
-       JOIN actor.org_unit o ON o.id=ahr.pickup_lib
-       LEFT JOIN biblio.record_entry bre ON(ahr.target=bre.id AND ahr.hold_type='T')
-       LEFT JOIN (SELECT acn2.record,ac2.id FROM asset.call_number acn2 JOIN asset.copy ac2
-                  ON ac2.call_number=acn2.id) ac_hold ON(ahr.target=ac_hold.id AND ahr.hold_type='C')
-       LEFT JOIN (SELECT acn2.record,acn2.id FROM asset.call_number acn2 JOIN asset.copy ac2 ON ac2.call_number=acn2.id) acn_hold
-       ON(ahr.target=acn_hold.id AND ahr.hold_type='V')
-       LEFT JOIN (SELECT acn2.record,acp2.part as id FROM asset.call_number acn2 JOIN asset.copy ac2 ON ac2.call_number=acn2.id
-                  JOIN asset.copy_part_map acp2 ON acp2.target_copy=ac2.id) acp_hold ON(ahr.target=acp_hold.id AND ahr.hold_type='P')
-       LEFT JOIN metabib.metarecord mmr ON(mmr.id=ahr.target AND ahr.hold_type='M')
-       WHERE ahr.id IN (:id_list)
-       AND (ahr.request_time > ?)
+           a.bibrecordid,
+           a.pickup_lib,
+           a.shortname,
+           COUNT(*) AS hold_count
+       FROM (
+           SELECT
+               (
+                   CASE
+                   WHEN ahr.hold_type='T' THEN ahr.target
+                   WHEN ahr.hold_type='C' THEN ac_hold.record
+                   WHEN ahr.hold_type='V' THEN acn_hold.record
+                   WHEN ahr.hold_type='P' THEN acp_hold.record
+                   WHEN ahr.hold_type='M' THEN mmr.master_record
+                   ELSE -1
+                   END
+               ) as bibrecordid, ahr.pickup_lib, o.shortname
+           FROM action.hold_request ahr
+           JOIN actor.org_unit o ON o.id=ahr.pickup_lib
+           LEFT JOIN biblio.record_entry bre ON(ahr.target=bre.id AND ahr.hold_type='T')
+           LEFT JOIN (SELECT acn2.record,ac2.id FROM asset.call_number acn2 JOIN asset.copy ac2
+                      ON ac2.call_number=acn2.id) ac_hold ON(ahr.target=ac_hold.id AND ahr.hold_type='C')
+           LEFT JOIN (SELECT acn2.record,acn2.id FROM asset.call_number acn2 JOIN asset.copy ac2 ON ac2.call_number=acn2.id) acn_hold
+           ON(ahr.target=acn_hold.id AND ahr.hold_type='V')
+           LEFT JOIN (SELECT acn2.record,acp2.part as id FROM asset.call_number acn2 JOIN asset.copy ac2 ON ac2.call_number=acn2.id
+                      JOIN asset.copy_part_map acp2 ON acp2.target_copy=ac2.id) acp_hold ON(ahr.target=acp_hold.id AND ahr.hold_type='P')
+           LEFT JOIN metabib.metarecord mmr ON(mmr.id=ahr.target AND ahr.hold_type='M')
+           WHERE ahr.id IN (:id_list)
+           AND (ahr.request_time > ?)
+       ) a
+       GROUP BY a.bibrecordid, a.pickup_lib, a.shortname
     };
 }
 
