@@ -136,7 +136,13 @@ sub write_data_to_file {
 
     # Write each row of data to the output file
     foreach my $r (@$data) {
-        print $OUT Encode::encode('UTF-8', join("\t", map { $_ // '' } @$r) . "\n");
+        # Sanitize each field to replace line breaks with spaces
+        my @sanitized_row = map { 
+            my $val = $_ // ''; 
+            $val =~ s/[\r\n]+/ /g; 
+            $val 
+        } @$r;
+        print $OUT Encode::encode('UTF-8', join("\t", @sanitized_row) . "\n");
     }
 
     # Close the output file
