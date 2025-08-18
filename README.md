@@ -41,7 +41,7 @@ This software extracts data from an Evergreen server and securely transfers the 
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/IanSkelskey/library-iq-extract.git
+    git clone https://github.com/Bibliomation-Inc/library-iq-extract
     cd libraryiq-extract
     ```
 
